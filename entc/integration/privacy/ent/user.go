@@ -64,10 +64,12 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldID, user.FieldAge:
+		case user.FieldID:
 			values[i] = new(sql.NullInt64)
 		case user.FieldName:
 			values[i] = new(sql.NullString)
+		case user.FieldAge:
+			values[i] = new(sql.NullUint64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -96,10 +98,10 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				_m.Name = value.String
 			}
 		case user.FieldAge:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
+			if value, ok := values[i].(*sql.NullUint64); !ok {
 				return fmt.Errorf("unexpected type %T for field age", values[i])
 			} else if value.Valid {
-				_m.Age = uint(value.Int64)
+				_m.Age = uint(value.Uint64)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])

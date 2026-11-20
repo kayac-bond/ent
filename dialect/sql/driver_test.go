@@ -6,6 +6,7 @@ package sql
 
 import (
 	"context"
+	"math"
 	"testing"
 
 	"entgo.io/ent/dialect"
@@ -90,4 +91,42 @@ func TestWithVars(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, mock.ExpectationsWereMet())
 	// No rows are returned, so no need to close them.
+}
+
+func TestNullUint64(t *testing.T) {
+	for _, tt := range []struct {
+		in    any
+		want  uint64
+		valid bool
+	}{
+		{in: nil},
+		{in: int64(42), want: 42, valid: true},
+		{in: uint64(math.MaxUint64), want: math.MaxUint64, valid: true},
+		{in: uint64(math.MaxInt64 + 1), want: math.MaxInt64 + 1, valid: true},
+		{in: []byte("18446744073709551615"), want: math.MaxUint64, valid: true},
+		{in: "9223372036854775808", want: math.MaxInt64 + 1, valid: true},
+	} {
+		var n NullUint64
+		require.NoError(t, n.Scan(tt.in), "scan %v", tt.in)
+		require.Equal(t, tt.valid, n.Valid)
+		require.Equal(t, tt.want, n.Uint64)
+		v, err := n.Value()
+		require.NoError(t, err)
+		if tt.valid {
+			require.Equal(t, tt.want, v)
+		} else {
+			require.Nil(t, v)
+		}
+	}
+	// Negative values are wrapped around, similar to scanning into NullInt64 and converting to uint64.
+	for _, in := range []any{int64(-1), []byte("-1"), "-1"} {
+		var n NullUint64
+		require.NoError(t, n.Scan(in), "scan %v", in)
+		require.True(t, n.Valid)
+		require.Equal(t, uint64(math.MaxUint64), n.Uint64)
+	}
+	var n NullUint64
+	require.Error(t, n.Scan([]byte("18446744073709551616")))
+	require.Error(t, n.Scan("foo"))
+	require.False(t, n.Valid)
 }
