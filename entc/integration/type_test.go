@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -126,6 +127,23 @@ func Types(t *testing.T, client *ent.Client) {
 	require.EqualValues(5, ft.OptionalUint64)
 	ft = client.FieldType.UpdateOne(ft).AddOptionalUint64(-5).SaveX(ctx)
 	require.Zero(ft.OptionalUint64)
+
+	// Unsigned 64-bit values greater than math.MaxInt64 are supported only by MySQL-based databases.
+	if strings.Contains(t.Name(), "MySQL") || strings.Contains(t.Name(), "Maria") {
+		for _, v := range []uint64{math.MaxInt64 + 1, math.MaxUint64} {
+			ft = client.FieldType.UpdateOne(ft).SetOptionalUint64(v).SetOptionalUint(uint(v)).SaveX(ctx)
+			ft = client.FieldType.GetX(ctx, ft.ID)
+			require.Equal(v, ft.OptionalUint64)
+			require.Equal(uint(v), ft.OptionalUint)
+			ft = client.FieldType.Query().Where(fieldtype.ID(ft.ID)).OnlyX(ctx)
+			require.Equal(v, ft.OptionalUint64)
+			require.Equal(uint(v), ft.OptionalUint)
+			var vs []uint64
+			client.FieldType.Query().Where(fieldtype.ID(ft.ID)).Select(fieldtype.FieldOptionalUint64).ScanX(ctx, &vs)
+			require.Equal([]uint64{v}, vs)
+		}
+		ft = client.FieldType.UpdateOne(ft).SetOptionalUint64(0).SetOptionalUint(0).SaveX(ctx)
+	}
 
 	err = client.FieldType.Create().
 		SetInt(1).

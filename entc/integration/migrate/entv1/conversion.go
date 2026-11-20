@@ -46,10 +46,12 @@ func (*Conversion) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case conversion.FieldID, conversion.FieldInt8ToString, conversion.FieldUint8ToString, conversion.FieldInt16ToString, conversion.FieldUint16ToString, conversion.FieldInt32ToString, conversion.FieldUint32ToString, conversion.FieldInt64ToString, conversion.FieldUint64ToString:
+		case conversion.FieldID, conversion.FieldInt8ToString, conversion.FieldUint8ToString, conversion.FieldInt16ToString, conversion.FieldUint16ToString, conversion.FieldInt32ToString, conversion.FieldUint32ToString, conversion.FieldInt64ToString:
 			values[i] = new(sql.NullInt64)
 		case conversion.FieldName:
 			values[i] = new(sql.NullString)
+		case conversion.FieldUint64ToString:
+			values[i] = new(sql.NullUint64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -120,10 +122,10 @@ func (_m *Conversion) assignValues(columns []string, values []any) error {
 				_m.Int64ToString = value.Int64
 			}
 		case conversion.FieldUint64ToString:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
+			if value, ok := values[i].(*sql.NullUint64); !ok {
 				return fmt.Errorf("unexpected type %T for field uint64_to_string", values[i])
 			} else if value.Valid {
-				_m.Uint64ToString = uint64(value.Int64)
+				_m.Uint64ToString = uint64(value.Uint64)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])

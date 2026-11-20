@@ -76,12 +76,12 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldID:
-			values[i] = new(sql.NullInt64)
 		case user.FieldName:
 			values[i] = new(sql.NullString)
+		case user.FieldID:
+			values[i] = new(sql.NullUint64)
 		case user.ForeignKeys[0]: // user_spouse
-			values[i] = new(sql.NullInt64)
+			values[i] = new(sql.NullUint64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -98,11 +98,11 @@ func (_m *User) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case user.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
+			if value, ok := values[i].(*sql.NullUint64); !ok {
+				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value.Valid {
+				_m.ID = uint64(value.Uint64)
 			}
-			_m.ID = uint64(value.Int64)
 		case user.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -110,11 +110,11 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				_m.Name = value.String
 			}
 		case user.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field user_spouse", value)
+			if value, ok := values[i].(*sql.NullUint64); !ok {
+				return fmt.Errorf("unexpected type %T for field user_spouse", values[i])
 			} else if value.Valid {
 				_m.user_spouse = new(uint64)
-				*_m.user_spouse = uint64(value.Int64)
+				*_m.user_spouse = uint64(value.Uint64)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])

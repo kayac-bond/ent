@@ -221,8 +221,8 @@ func ({{ $receiver }} *{{ $builder }}) loadBlobFields(ctx context.Context, nodes
 				return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
 					assign := spec.Assign
 					values := spec.ScanValues
-					{{- $out := "sql.NullInt64" }}{{ if $.ID.UserDefined }}{{ $out = $.ID.ScanType }}{{ end }}
-					{{- $in := "sql.NullInt64" }}{{ if $e.Type.ID.UserDefined }}{{ $in = $e.Type.ID.ScanType }}{{ end }}
+					{{- $out := "sql.NullInt64" }}{{ if or $.ID.UserDefined (eq $.ID.ScanType "sql.NullUint64") }}{{ $out = $.ID.ScanType }}{{ end }}
+					{{- $in := "sql.NullInt64" }}{{ if or $e.Type.ID.UserDefined (eq $e.Type.ID.ScanType "sql.NullUint64") }}{{ $in = $e.Type.ID.ScanType }}{{ end }}
 					spec.ScanValues = func(columns []string) ([]any, error) {
 						values, err := values(columns[1:])
 						if err != nil {
