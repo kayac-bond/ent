@@ -264,6 +264,33 @@ type (
 	TxOptions = sql.TxOptions
 )
 
+// NullUint64 represents a uint64 that may be null. Unlike NullInt64, it can
+// hold values greater than math.MaxInt64 (e.g. MySQL BIGINT UNSIGNED columns).
+// NullUint64 implements the sql.Scanner interface so it can be used as a scan
+// destination, similar to the types above.
+type NullUint64 struct {
+	Uint64 uint64
+	Valid  bool // Valid is true if Uint64 is not NULL.
+}
+
+// Scan implements the sql.Scanner interface.
+func (n *NullUint64) Scan(value any) error {
+	var v sql.Null[uint64]
+	if err := v.Scan(value); err != nil {
+		return err
+	}
+	n.Uint64, n.Valid = v.V, v.Valid
+	return nil
+}
+
+// Value implements the driver.Valuer interface.
+func (n NullUint64) Value() (driver.Value, error) {
+	if !n.Valid {
+		return nil, nil
+	}
+	return n.Uint64, nil
+}
+
 // NullScanner implements the sql.Scanner interface such that it
 // can be used as a scan destination, similar to the types above.
 type NullScanner struct {
