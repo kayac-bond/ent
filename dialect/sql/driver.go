@@ -276,8 +276,16 @@ type NullUint64 struct {
 // Scan implements the sql.Scanner interface.
 func (n *NullUint64) Scan(value any) error {
 	var v sql.Null[uint64]
-	if err := v.Scan(value); err != nil {
-		return err
+	err := v.Scan(value)
+	if err != nil {
+		// Databases without unsigned integer types (e.g. SQLite or PostgreSQL) may
+		// hold negative values in unsigned fields. Keep the behavior of NullInt64,
+		// that wraps them around using the Go conversion rules, for compatibility.
+		var i sql.NullInt64
+		if i.Scan(value) != nil {
+			return err
+		}
+		v.V, v.Valid = uint64(i.Int64), i.Valid
 	}
 	n.Uint64, n.Valid = v.V, v.Valid
 	return nil
