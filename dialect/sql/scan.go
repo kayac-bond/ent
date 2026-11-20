@@ -357,10 +357,8 @@ func ScanTypeOf(rows *Rows, i int) any {
 	case reflect.Bool:
 		rt = reflect.TypeOf(sql.NullBool{})
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint8, reflect.Uint16, reflect.Uint32:
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		rt = reflect.TypeOf(sql.NullInt64{})
-	case reflect.Uint, reflect.Uint64:
-		rt = reflect.TypeOf(NullUint64{})
 	case reflect.Float32, reflect.Float64:
 		rt = reflect.TypeOf(sql.NullFloat64{})
 	case reflect.String:
@@ -405,10 +403,6 @@ func (s SelectValues) Get(name string) (any, error) {
 	case NullInt64:
 		if rv.Valid {
 			return rv.Int64, nil
-		}
-	case NullUint64:
-		if rv.Valid {
-			return rv.Uint64, nil
 		}
 	case NullFloat64:
 		if rv.Valid {
