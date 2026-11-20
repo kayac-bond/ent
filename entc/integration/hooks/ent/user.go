@@ -97,10 +97,12 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldActive:
 			values[i] = new(sql.NullBool)
-		case user.FieldID, user.FieldVersion, user.FieldWorth:
+		case user.FieldID, user.FieldVersion:
 			values[i] = new(sql.NullInt64)
 		case user.FieldName, user.FieldPassword:
 			values[i] = new(sql.NullString)
+		case user.FieldWorth:
+			values[i] = new(sql.NullUint64)
 		case user.ForeignKeys[0]: // user_best_friend
 			values[i] = new(sql.NullInt64)
 		default:
@@ -137,10 +139,10 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				_m.Name = value.String
 			}
 		case user.FieldWorth:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
+			if value, ok := values[i].(*sql.NullUint64); !ok {
 				return fmt.Errorf("unexpected type %T for field worth", values[i])
 			} else if value.Valid {
-				_m.Worth = uint(value.Int64)
+				_m.Worth = uint(value.Uint64)
 			}
 		case user.FieldPassword:
 			if value, ok := values[i].(*sql.NullString); !ok {

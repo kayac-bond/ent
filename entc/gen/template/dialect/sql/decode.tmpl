@@ -50,7 +50,7 @@ func (*{{ $.Name }}) scanValues(columns []string) ([]any, error) {
 			{{- range $i, $fk := $.UnexportedForeignKeys }}
 				{{- $f := $fk.Field }}
 				case {{ $.Package }}.ForeignKeys[{{ $i }}]: // {{ $f.Name }}
-					values[i] = {{ if not $f.UserDefined }}new(sql.NullInt64){{ else }}{{ $f.NewScanType }}{{ end }}
+					values[i] = {{ if and (not $f.UserDefined) (ne $f.ScanType "sql.NullUint64") }}new(sql.NullInt64){{ else }}{{ $f.NewScanType }}{{ end }}
 			{{- end }}
 			default:
 				{{- /* In case of unknown column that was added by a modifier, predicate, etc., fallback to any. */}}
@@ -70,7 +70,7 @@ func ({{ $receiver }} *{{ $.Name }}) assignValues(columns []string, values []any
 		switch columns[i] {
 		{{- if $.HasOneFieldID }}
 			case {{ $.Package }}.{{ $.ID.Constant }}:
-				{{- if or $.ID.IsString $.ID.IsBytes $.ID.HasGoType $.ID.HasValueScanner }}
+				{{- if or $.ID.IsString $.ID.IsBytes $.ID.HasGoType $.ID.HasValueScanner (eq $.ID.ScanType "sql.NullUint64") }}
 					{{- with extend $ "Idx" "i" "Field" $.ID "Rec" $receiver }}
 						{{ template "dialect/sql/decode/field" . }}
 					{{- end }}
@@ -91,7 +91,7 @@ func ({{ $receiver }} *{{ $.Name }}) assignValues(columns []string, values []any
 		{{- range $i, $fk := $.UnexportedForeignKeys }}
 			{{- $f := $fk.Field }}
 			case {{ if $fk.UserDefined }}{{ $.Package }}.{{ $.ID.Constant }}{{ else }}{{ $.Package }}.ForeignKeys[{{ $i }}]{{ end }}:
-				{{- if or $fk.UserDefined (and $f.UserDefined (or $f.IsString $f.IsBytes $f.HasGoType)) }}
+				{{- if or $fk.UserDefined (and $f.UserDefined (or $f.IsString $f.IsBytes $f.HasGoType)) (eq $f.ScanType "sql.NullUint64") }}
 					{{- with extend $ "Idx" "i" "Field" $f "Rec" $receiver "StructField" $fk.StructField }}
 						{{ template "dialect/sql/decode/field" . }}
 					{{- end }}

@@ -1414,8 +1414,11 @@ func (f Field) ScanType() string {
 	case field.TypeTime:
 		return "sql.NullTime"
 	case field.TypeInt, field.TypeInt8, field.TypeInt16, field.TypeInt32, field.TypeInt64,
-		field.TypeUint, field.TypeUint8, field.TypeUint16, field.TypeUint32, field.TypeUint64:
+		field.TypeUint8, field.TypeUint16, field.TypeUint32:
 		return "sql.NullInt64"
+	case field.TypeUint, field.TypeUint64:
+		// Values greater than math.MaxInt64 cannot be scanned into sql.NullInt64.
+		return "sql.NullUint64"
 	case field.TypeFloat32, field.TypeFloat64:
 		return "sql.NullFloat64"
 	}
@@ -1498,8 +1501,10 @@ func (f Field) NewScanType() string {
 	case field.TypeTime:
 		expr = "sql.NullTime"
 	case field.TypeInt, field.TypeInt8, field.TypeInt16, field.TypeInt32, field.TypeInt64,
-		field.TypeUint, field.TypeUint8, field.TypeUint16, field.TypeUint32, field.TypeUint64:
+		field.TypeUint8, field.TypeUint16, field.TypeUint32:
 		expr = "sql.NullInt64"
+	case field.TypeUint, field.TypeUint64:
+		expr = "sql.NullUint64"
 	case field.TypeFloat32, field.TypeFloat64:
 		expr = "sql.NullFloat64"
 	}
@@ -1529,8 +1534,10 @@ func (f Field) ScanTypeField(rec string) string {
 	case field.TypeFloat32:
 		expr = fmt.Sprintf("%s(%s.Float64)", f.Type, rec)
 	case field.TypeInt, field.TypeInt8, field.TypeInt16, field.TypeInt32,
-		field.TypeUint, field.TypeUint8, field.TypeUint16, field.TypeUint32, field.TypeUint64:
+		field.TypeUint8, field.TypeUint16, field.TypeUint32:
 		expr = fmt.Sprintf("%s(%s.Int64)", f.Type, rec)
+	case field.TypeUint, field.TypeUint64:
+		expr = fmt.Sprintf("%s(%s.Uint64)", f.Type, rec)
 	}
 	return expr
 }
