@@ -118,7 +118,15 @@ func TestNullUint64(t *testing.T) {
 			require.Nil(t, v)
 		}
 	}
+	// Negative values are wrapped around, similar to scanning into NullInt64 and converting to uint64.
+	for _, in := range []any{int64(-1), []byte("-1"), "-1"} {
+		var n NullUint64
+		require.NoError(t, n.Scan(in), "scan %v", in)
+		require.True(t, n.Valid)
+		require.Equal(t, uint64(math.MaxUint64), n.Uint64)
+	}
 	var n NullUint64
-	require.Error(t, n.Scan(int64(-1)))
 	require.Error(t, n.Scan([]byte("18446744073709551616")))
+	require.Error(t, n.Scan("foo"))
+	require.False(t, n.Valid)
 }
